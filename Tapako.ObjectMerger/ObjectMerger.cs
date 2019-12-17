@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,6 +29,36 @@ namespace Tapako.ObjectMerger
             set { _copyEqualValues = value; }
         }
 
+        /// <summary>
+        /// Merged eine Liste von Objekten Immutable
+        /// </summary>
+        /// <param name="obj">All informations will be merged into this object</param>
+        /// <param name="mergingObjects"></param>
+        public static T MergeObjectsImmutable<T>(T obj, params object[] mergingObjects)
+        {
+            var clone = Clone(obj);
+
+            foreach (var item in mergingObjects)
+            {
+                clone = MergeObjects(clone, item);
+            }
+
+            return clone;
+        }
+
+        /// <summary>
+        /// Merges objects immutable asynchronously 
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <param name="destination"></param>
+        /// <param name="mergingObjects"></param>
+        /// <returns></returns>
+        public static async Task<T1> AsyncMergeObjectsImmutable<T1>(T1 destination, params object[] mergingObjects)
+        {
+            var clone = Clone(destination);
+
+            return await Task.Run(() => MergeObjects(clone, mergingObjects));
+        }        
 
         /// <summary>
         /// Merged eine Liste von Objekten
@@ -416,6 +447,19 @@ namespace Tapako.ObjectMerger
             {
                 ObjectMergerLogger.GetInstance().Error(exception);
             }
+        }
+
+        /// <summary>
+        /// Trick for deep clone of object
+        /// </summary>
+        /// <typeparam name="T">Type of source object</typeparam>
+        /// <param name="source">Source object</param>
+        /// <returns></returns>
+        private static T Clone<T>(T source)
+        {
+            var serialized = JsonConvert.SerializeObject(source);
+
+            return JsonConvert.DeserializeObject<T>(serialized);
         }
     }
 }
